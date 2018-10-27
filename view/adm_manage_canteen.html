@@ -197,6 +197,32 @@
 				finishLoading(".content");
 			}
 		}
+
+		// for testing and presentation.
+		function put_demo_data(){
+			showPeopleCount({"success":true,"currentDate":"2018-10-27","result":[
+				{"day":-14,"people":200},
+				{"day":-13,"people":500},
+				{"day":-11,"people":100},
+				{"day":-10,"people":800},
+				{"day":-9,"people":600},
+				{"day":-8,"people":1400},
+				{"day":-7,"people":500},
+				{"day":-5,"people":300},
+				{"day":-4,"people":200},
+				{"day":-2,"people":200},
+				{"day":1,"people":700},
+				{"day":0,"people":300},
+			]});
+			showMostWelcomed({"success":true,"result":[
+				{"dish":"瑞士雞翼","love":287},
+				{"dish":"脆香雞翼","love":200},
+				{"dish":"意粉","love":167},
+				{"dish":"麻婆豆腐","love":149},
+				{"dish":"牛腩","love":127},
+			]});
+		}
+		put_demo_data();
 	</script>
 
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">

@@ -39,28 +39,6 @@
 				<hr>
 
 				<ul class="dish-list">
-					<li>
-						<h4>宮保雞丁</h4>
-						<p class="foot align-left">
-							<a href="#" class="delete">
-								<i class="far fa-trash-alt"></i>
-							</a><!-- 
-						--><a href="#" class="full-width">
-								<i class="far fa-edit"></i> 修改
-							</a>
-						</p>
-					</li>
-					<li>
-						<h4>咖哩雞</h4>
-						<p class="foot align-left">
-							<a href="#" class="delete">
-								<i class="far fa-trash-alt"></i>
-							</a><!-- 
-						--><a href="#" class="full-width">
-								<i class="far fa-edit"></i> 修改
-							</a>
-						</p>
-					</li>
 				</ul>
 			</ul>
 		</div>
@@ -72,6 +50,17 @@
 	</div>
 
 	<div id="warehouse">
+		<li id="list-item">
+			<h4></h4>
+			<p class="foot align-left">
+				<a href="#" class="delete">
+					<i class="far fa-trash-alt"></i>
+				</a><!-- 
+			-->&nbsp;<!-- <a href="#" class="full-width">
+					<i class="far fa-edit"></i> 修改
+				</a> -->
+			</p>
+		</li>
 	</div>
 
 	<script
@@ -84,12 +73,44 @@
 	<script>
 		setTitle('填寫菜式 | CYTC 鄭裕彤書院');
 
-		function add_one_dish_proc(){
+		function showMenu(){
+			getJSON("menu/allday/" + 'CYTC' + "/" + getNearestDay_YMD(), function(data){
+				
+				$(".dish-list li").remove();
 
+				for(var key in data.result) {
+					thisData = data.result[key];
+
+					var el = $("#list-item").clone();
+					el.attr("id", "dish-" + thisData.id);
+
+					var el_h4 = el.find("h4");
+					el_h4.text(thisData.dish + '(' + getMealTypeText(thisData.mealType) + ')');
+
+					var el_a = el.find(".delete")
+					el_a.attr('href', 'javascript:removeDish("'+thisData.mealType+'","'+thisData.dish+'")')
+
+					$(".dish-list").append(el);
+				}
+			});
+		}
+
+		showMenu();
+
+		function removeDish(period, name){
+
+			getJSON("menu/remove/" + 'CYTC' + "/" + getNearestDay_YMD() + "/" + period + "/" + name, function(data){
+
+				showMenu();
+			})
 		}
 
 		function add_one_dish(){
 			var name = $("#name").val();
+
+			if(name.trim().length < 1){
+				return;
+			}
 
 			getJSON("menu/new", {
 				date: getNearestDay_YMD(),
@@ -97,7 +118,8 @@
 				mealType: $('input[name="period"]:checked').val(),
 				dish: $("#name").val()
 			}, function(data){
-				console.log(data);
+				$("#name").val('');
+				showMenu();
 			});
 		}
 
@@ -137,6 +159,7 @@
 
 			withItemPicked = add_radio('BREAKFAST', '早餐', curHour, 10, withItemPicked);
 			withItemPicked = add_radio('LUNCH', '午餐', curHour, 20, withItemPicked);
+			// For Testing and Presentation. 'LUNCH' value should be 14
 			withItemPicked = add_radio('DINNER', '晚餐', curHour, 20, withItemPicked);
 
 			$(".radio-like").css('width', (100 / totalItem) + '%');

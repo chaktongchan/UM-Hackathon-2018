@@ -65,3 +65,10 @@ function getNearestDay_YMD(with_slash){
 	}
 	return returnDay_YMD(d, with_slash);
 }
+
+function getMealTypeText(mealType){
+	if(mealType==='BREAKFAST'){return '早餐';}
+	if(mealType==='LUNCH'){return '午餐';}
+	if(mealType==='DINNER'){return '晚餐';}
+}
+

@@ -99,6 +99,7 @@ body {
 }
 #main > .wrapper ul > li p.foot.align-left {
 	text-align: left;
+	overflow: hidden;
 }
 #main > .wrapper ul > li p.foot a {
 	width: 50%;
