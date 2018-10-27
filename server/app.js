@@ -210,18 +210,41 @@ app.get('/menu/:rc/:date/:mealType', function (req, res) {
   });
 })
 
-app.get('/love/:rc/:date/:mealType/:dish', function (req, res) {
+app.get('/love/:rc/:date/:mealType/:id', function (req, res) {
   mysqlConnection();
 
-  con.query('UPDATE DHR.Menu SET love = love + 1 where rc = ? and date = ? and mealType = ? and dish = ?', 
-  [req.params.rc, req.params.date, req.params.mealType, req.params.dish], function (err, result, fields) {
+  con.query('UPDATE DHR.Menu SET love = love + 1 where rc = ? and date = ? and mealType = ? and id = ?', 
+  [req.params.rc, req.params.date, req.params.mealType, req.params.id], function (err, result, fields) {
     if (err) {
       var responseStr = {'success': false, 'message': err};
       res.send(responseStr);
       return;
     }
-    con.query('SELECT * FROM DHR.Menu WHERE rc = ? and mealType = ? and date = ? and dish = ?', 
-    [req.params.rc, req.params.mealType, req.params.date, req.params.dish], function (err, result, fields) {
+    con.query('SELECT * FROM DHR.Menu WHERE rc = ? and mealType = ? and date = ? and id = ?', 
+    [req.params.rc, req.params.mealType, req.params.date, req.params.id], function (err, result, fields) {
+      if (err) {
+        var responseStr = {'success': false, 'message': err};
+        res.send(responseStr);
+        return;
+      }
+      var responseStr = {'success': true, 'result': result};
+      res.send(responseStr);
+    });
+  });
+})
+
+app.get('/unlove/:rc/:date/:mealType/:id', function (req, res) {
+  mysqlConnection();
+
+  con.query('UPDATE DHR.Menu SET love = love - 1 where rc = ? and date = ? and mealType = ? and id = ?', 
+  [req.params.rc, req.params.date, req.params.mealType, req.params.id], function (err, result, fields) {
+    if (err) {
+      var responseStr = {'success': false, 'message': err};
+      res.send(responseStr);
+      return;
+    }
+    con.query('SELECT * FROM DHR.Menu WHERE rc = ? and mealType = ? and date = ? and id = ?', 
+    [req.params.rc, req.params.mealType, req.params.date, req.params.id], function (err, result, fields) {
       if (err) {
         var responseStr = {'success': false, 'message': err};
         res.send(responseStr);
