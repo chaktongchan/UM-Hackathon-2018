@@ -45,7 +45,7 @@
 	<script>
 
 		function showPeopleCount(key){
-			$.getJSON("http://10.8.207.15:3000/numberOfPeople/" + key, function(data){
+			getJSON("numberOfPeople/" + key, function(data){
 				if(data.result[0]){
 					$("#col-" + key).find("strong").text(data.result[0].people);
 				}
