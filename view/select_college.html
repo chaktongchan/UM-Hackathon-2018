@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Dine in UM</title>
+	<link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+
+	<div id="header">
+		<div class="wrapper">
+			<h1>Dine in UM</h1>
+		</div>
+	</div>
+
+	<div id="main">
+		<div class="wrapper">
+			<ul id="college-list">
+				<p class="loading">Loading...</p>
+			</ul>
+		</div>
+	</div>
+
+	<div id="footer">
+		&copy; 2018
+	</div>
+
+	<div id="warehouse">
+		<li id="list-item">
+			<a>
+				<h3></h3>
+				<p class="foot">今餐累計用餐 <strong></strong> 人</p>
+			</a>
+		</li>
+	</div>
+
+	<script
+		src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+		crossorigin="anonymous"></script>
+
+	<script src="script/script.js"></script>
+
+	<script>
+
+		function showPeopleCount(key){
+			getJSON("numberOfPeople/" + key, function(data){
+				if(data.result[0]){
+					$("#col-" + key).find("strong").text(data.result[0].people);
+				}
+			});
+		}
+
+		getJSON("rc", function(data){
+
+			$("#college-list li").remove();
+
+			for(var key in data) {
+
+				var el = $("#list-item").clone();
+				el.attr("id", "col-" + key);
+
+				var el_a = el.find("a");
+				el_a.attr("href", "select_dish.html?col=" + key);
+
+				var el_h3 = el_a.find("h3");
+				el_h3.text(key + ' ' + data[key].chinUnitName);
+
+				$("#college-list").append(el);
+				showPeopleCount(key);
+			}
+
+			finishLoading("#college-list");
+		});
+	</script>
+
+
+</body>
+</html>

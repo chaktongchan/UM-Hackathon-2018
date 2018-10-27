@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> | Dine in UM</title>
+	<link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+
+	<div id="header">
+		<div class="wrapper">
+			<a href="javascript:history.go(-1)" class="back"><</a>
+			<h1 id="title"></h1>
+		</div>
+	</div>
+
+	<div id="main">
+		<div class="wrapper">
+			<p class="tips">下一餐有些甚麼？要一個一個打喔～</p>
+			<ul class="content">
+				<form action="javascript:add_one_dish()">
+					<p>
+						<label for="name">菜名</label>
+						<input type="text" id="name" placeholder="如：宮保雞丁">
+					</p>
+					<p>
+						<label for="period">供應時段</label>
+						<span id="cur-date"></span>
+					</p>
+					<p class="section"></p>
+					<p class="tips">
+						<label for="submit" class="btn-like">
+							<i class="fas fa-arrow-right"></i> 加入
+							<input id="submit" type="submit">
+						</label>
+					</p>
+				</form>
+
+				<hr>
+
+				<ul class="dish-list">
+				</ul>
+			</ul>
+		</div>
+	</div>
+
+
+	<div id="footer">
+		&copy; 2018
+	</div>
+
+	<div id="warehouse">
+		<li id="list-item">
+			<h4></h4>
+			<p class="foot align-left">
+				<a href="#" class="delete">
+					<i class="far fa-trash-alt"></i>
+				</a><!-- 
+			-->&nbsp;<!-- <a href="#" class="full-width">
+					<i class="far fa-edit"></i> 修改
+				</a> -->
+			</p>
+		</li>
+	</div>
+
+	<script
+		src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+		crossorigin="anonymous"></script>
+
+	<script src="script/script.js"></script>
+
+	<script>
+		setTitle('填寫菜式 | CYTC 鄭裕彤書院');
+
+		function showMenu(){
+			getJSON("menu/allday/" + 'CYTC' + "/" + getNearestDay_YMD(), function(data){
+				
+				$(".dish-list li").remove();
+
+				for(var key in data.result) {
+					thisData = data.result[key];
+
+					var el = $("#list-item").clone();
+					el.attr("id", "dish-" + thisData.id);
+
+					var el_h4 = el.find("h4");
+					el_h4.text(thisData.dish + '(' + getMealTypeText(thisData.mealType) + ')');
+
+					var el_a = el.find(".delete")
+					el_a.attr('href', 'javascript:removeDish("'+thisData.mealType+'","'+thisData.dish+'")')
+
+					$(".dish-list").append(el);
+				}
+			});
+		}
+
+		showMenu();
+
+		function removeDish(period, name){
+
+			getJSON("menu/remove/" + 'CYTC' + "/" + getNearestDay_YMD() + "/" + period + "/" + name, function(data){
+
+				showMenu();
+			})
+		}
+
+		function add_one_dish(){
+			var name = $("#name").val();
+
+			if(name.trim().length < 1){
+				return;
+			}
+
+			getJSON("menu/new", {
+				date: getNearestDay_YMD(),
+				rc: 'CYTC',
+				mealType: $('input[name="period"]:checked').val(),
+				dish: $("#name").val()
+			}, function(data){
+				$("#name").val('');
+				showMenu();
+			});
+		}
+
+		function add_radio(id, name, curHour, max_hour, withItemPicked) {
+			var input = $("<input></input>")
+				.attr('id', id)
+				.attr('value', id)
+				.attr('type', 'radio')
+				.attr('name', 'period')
+				.hide();
+			if(curHour < max_hour || curHour >= 20) {
+				if(!withItemPicked){
+					input.attr('checked', true);
+				}
+				withItemPicked = true;
+			}
+			else{
+				input.attr('disabled', true);
+			}
+			$(".section").append(input).append(
+				$("<label></label>")
+				.addClass('radio-like')
+				.attr('for', id)
+				.html('<i class="fas fa-check"></i> ' + name)
+			);
+			return withItemPicked;
+		}
+
+		function init_options(){
+
+			var curHour = new Date().getHours();
+
+			$("#cur-date").text(getNearestDay_YMD());
+
+			var totalItem = 3;
+			var withItemPicked = false;
+
+			withItemPicked = add_radio('BREAKFAST', '早餐', curHour, 10, withItemPicked);
+			withItemPicked = add_radio('LUNCH', '午餐', curHour, 20, withItemPicked);
+			// For Testing and Presentation. 'LUNCH' value should be 14
+			withItemPicked = add_radio('DINNER', '晚餐', curHour, 20, withItemPicked);
+
+			$(".radio-like").css('width', (100 / totalItem) + '%');
+		}
+
+		init_options();
+	</script>
+
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
+</body>
+</html>

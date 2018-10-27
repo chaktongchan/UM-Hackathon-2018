@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> | Dine in UM</title>
+	<link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+
+	<div id="header">
+		<div class="wrapper">
+			<h1 id="title"></h1>
+		</div>
+	</div>
+
+	<div id="main">
+		<div class="wrapper">
+			<ul class="content">
+
+				<p class="tips">
+					下一餐的餐單是甚麼呢？
+					<a href="adm_add_dish.html" class="button">
+						<i class="fas fa-plus"></i> 
+						<span class="text">填寫菜式</span>
+					</a>
+				</p>
+
+				<hr>	
+
+				<p class="tips">
+					統計數據
+				</p>
+				<li>
+					<h3>用膳人數</h3>
+					<p class="y-axis">(人)</p>
+					<canvas id="people-count" height="150"></canvas>
+				</li>
+				<li>
+					<h3>最受歡迎菜式</h3>
+					<p class="y-axis">(<i class="far fa-heart"></i>)</p>
+					<canvas id="most-welcomed" height="150"></canvas>
+				</li>
+				<li>
+					<h3>是日評論</h3>
+					<ul>
+						<li>
+							<p class="head">宮保雞丁</h3>
+							<ul id="comments">
+								<li>
+									<h4>正 好食</h4>
+									<p class="foot">Date: <span class="date">2018-10-27</span></p>
+								</li>
+								<li>
+									<h4>兩日無食 好掛住啊</h4>
+									<p class="foot">Date: <span class="date">2018-10-27</span></p>
+								</li>
+							</ul>
+						</li>
+						<li>
+							<p class="head">布丁</h3>
+							<ul id="comments">
+								<li>
+									<h4>世界最好食的就在這裡 Yeah</h4>
+									<p class="foot">Date: <span class="date">2018-10-27</span></p>
+								</li>
+								<li>
+									<h4>正 好L好食</h4>
+									<p class="foot">Date: <span class="date">2018-10-27</span></p>
+								</li>
+							</ul>
+						</li>
+						<li>
+							<p class="head">燒雞翼</h3>
+							<ul id="comments">
+								<p class="loading">暫無</p>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+
+	<div id="footer">
+		&copy; 2018
+	</div>
+
+	<div id="warehouse">
+	</div>
+
+	<script
+		src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+		crossorigin="anonymous"></script>
+
+	<script src="script/script.js"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+	<script>
+		setTitle('飯堂 | CYTC 鄭裕彤書院');
+
+		var totalGraph = $("canvas").length;
+		var loadedGraph = 0;
+
+		var charts = {};
+		charts.obj = JSON.stringify({
+			type: 'line',
+			options: {
+				spanGaps: true,
+				legend: {
+					display: false
+				},
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true
+						}
+					}]
+				}
+			},
+			data: {
+				labels: [],
+				datasets: [{
+					borderColor: '#89c441',
+					backgroundColor: '#89c441',
+					fill: false,
+					data: []
+				}]
+			}
+		});
+
+		var obj_peopleCount = JSON.parse(charts.obj);
+
+		charts.peopleCount = new Chart(
+			$("#people-count")[0].getContext('2d'), obj_peopleCount
+		);
+
+		var obj_mostWelcomed = JSON.parse(charts.obj);
+		obj_mostWelcomed.type = 'bar';
+
+		charts.mostWelcomed = new Chart(
+			$("#most-welcomed")[0].getContext('2d'), obj_mostWelcomed
+		);
+
+		function showPeopleCount(data){
+
+			var dates = [];
+			var max = 14;
+
+			var d = new Date(data.currentDate);
+			dates[max] = get_DD_MM(d);
+
+			for(var i=max-1; i>=0; i--){
+				d.setDate(d.getDate() - 1);
+
+				dates[i] = get_DD_MM(d);
+			}
+
+			charts.peopleCount.data.labels = dates;
+			charts.peopleCount.data.datasets[0].data = [];
+
+			for(var i in data.result) {
+				var thisData = data.result[i];
+				var dataIndex = dates.length-1 + thisData.day;
+
+				if(dataIndex >= dates.length || thisData.day===0) {
+					continue;
+				}
+				charts.peopleCount.data.datasets[0].data[dataIndex] = thisData.people;
+			}
+			charts.peopleCount.update();
+
+			loadedGraph++;
+			if(loadedGraph === totalGraph){
+				finishLoading(".content");
+			}
+		}
+
+		function showMostWelcomed(data) {
+
+			charts.mostWelcomed.data.labels = [];
+			charts.mostWelcomed.data.datasets[0].data = [];
+
+			for(var key in data.result) {
+				var thisData = data.result[key];
+
+				charts.mostWelcomed.data.labels.push(thisData.dish);
+				charts.mostWelcomed.data.datasets[0].data.push(thisData.love)
+			}
+			charts.mostWelcomed.update();
+
+			loadedGraph++;
+			if(loadedGraph === totalGraph){
+				finishLoading(".content");
+			}
+		}
+
+		// for testing and presentation.
+		function put_demo_data(){
+			showPeopleCount({"success":true,"currentDate":"2018-10-27","result":[
+				{"day":-14,"people":200},
+				{"day":-13,"people":500},
+				{"day":-11,"people":100},
+				{"day":-10,"people":800},
+				{"day":-9,"people":600},
+				{"day":-8,"people":1400},
+				{"day":-7,"people":500},
+				{"day":-5,"people":300},
+				{"day":-4,"people":200},
+				{"day":-2,"people":200},
+				{"day":1,"people":700},
+				{"day":0,"people":300},
+			]});
+			showMostWelcomed({"success":true,"result":[
+				{"dish":"瑞士雞翼","love":287},
+				{"dish":"脆香雞翼","love":200},
+				{"dish":"意粉","love":167},
+				{"dish":"麻婆豆腐","love":149},
+				{"dish":"牛腩","love":127},
+			]});
+		}
+		put_demo_data();
+	</script>
+
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
+</body>
+</html>

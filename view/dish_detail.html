@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> | Dine in UM</title>
+	<link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+
+	<div id="header">
+		<div class="wrapper">
+			<a href="javascript:history.go(-1)" class="back"><</a>
+			<h1 id="title"></h1>
+		</div>
+	</div>
+
+	<div id="main">
+		<div class="wrapper">
+			<ul class="content" id="info">
+				<p class="loading">Loading...</p>
+				<p class="tips" style="color: #aaa;">註：本頁數據截至昨日 23:59。</p>
+				<li>
+					<h3>歷史紀錄</h3>
+					<table>
+						<tr>
+							<td>過往7日平均</td>
+							<td><i class="far fa-heart"></i> <span id="avg-d7"></span></td>
+						</tr>
+						<tr>
+							<td>過往14日平均</td>
+							<td><i class="far fa-heart"></i> <span id="avg-d14"></span></td>
+						</tr>
+					</table>
+				</li>
+
+				<li>
+					<h3>每週走勢</h3>
+					<p class="y-axis">(<i class="far fa-heart"></i>)</p>
+					<canvas id="weekly-graph" height="150"></canvas>
+				</li>
+			</ul>
+
+			<ul class="content">
+				<li>
+					<h3>評論</h3>
+
+					<ul id="comments">
+						<p class="loading">Loading...</p>
+					</ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+
+	<div id="footer">
+		&copy; 2018
+	</div>
+
+	<div id="warehouse">
+		<li id="comment-item">
+			<h4></h4>
+			<p class="foot">Date: <span class="date"></span></p>
+		</li>
+	</div>
+
+	<script
+		src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+		crossorigin="anonymous"></script>
+
+	<script src="script/script.js"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+	<script>
+		setTitle(getUrlParam('name') + ' 的歷史紀錄');
+
+		var chart = new Chart(
+			$("#weekly-graph")[0].getContext('2d'), {
+				type: 'line',
+				data: {
+					labels: [],
+					datasets: [{
+						borderColor: '#89c441',
+						fill: false,
+						data: []
+					}]
+				},
+				options: {
+					spanGaps: true,
+					legend: {
+						display: false
+					},
+					scales: {
+						yAxes: [{
+							ticks: {
+								beginAtZero: true
+							}
+						}]
+					}
+				}
+			}
+		);
+
+		function showGraph(data){
+
+			var dates = [];
+			var max = 4;
+
+			var d = new Date(data.currentDate);
+			dates[max] = get_DD_MM(d);
+
+			for(var i=max-1; i>=0; i--){
+				d.setDate(d.getDate() - 7);
+
+				dates[i] = get_DD_MM(d);
+			}
+
+			chart.data.labels = dates;
+			chart.data.datasets[0].data = [];
+
+			for(var i in data.result) {
+				var thisData = data.result[i];
+				var dataIndex = dates.length-1 + thisData._week;
+
+				if(dataIndex >= dates.length || thisData._week===0) {
+					continue;
+				}
+				chart.data.datasets[0].data[dataIndex] = thisData.love;
+			}
+			chart.update();
+
+			finishLoading("#info");
+		}
+
+		function showComments(data){
+
+			$("#comments li").remove();
+
+			data = data.result;
+
+			if(data.length < 1) {
+				$("#comments").find(".loading").text("暫無");
+			}
+			else{
+				for(var key in data) {
+
+					var el = $("#comment-item").clone();
+					el.attr("id", "");
+
+					var el_h4 = el.find("h4");
+					el_h4.text(data[key].comment);
+
+					var el_date = el.find("span.date");
+					el_date.text(data[key].date.split("T")[0]);
+
+					$("#comments").append(el);
+				}
+				finishLoading("#comments");
+			}
+		}
+
+		function showAvg(data){
+			$("#avg-d7").text(Math.floor(data.result.past7));
+			$("#avg-d14").text(Math.floor(data.result.past14));
+		}
+
+		getJSON('feedback/past/' + getUrlParam('col') + '/' + getUrlParam('name'), function(data){
+			showAvg(data);
+		});
+
+		getJSON('feedback/past28/' + getUrlParam('col') + '/' + getUrlParam('name'), function(data){
+			showGraph(data);
+		});
+
+		getJSON('comment/28/' + getUrlParam('col') + '/' + getUrlParam('name'), function(data){
+			showComments(data);
+		});
+	</script>
+
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
+</body>
+</html>
