@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> | Dine in UM</title>
+	<link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+
+	<div id="header">
+		<div class="wrapper">
+			<a href="javascript:history.go(-1)" class="back"><</a>
+			<h1 id="title"></h1>
+		</div>
+	</div>
+
+	<div id="main">
+		<div class="wrapper">
+			<ul id="dish-list">
+				<p class="loading">Loading...</p>
+			</ul>
+		</div>
+	</div>
+
+	<div id="footer">
+		&copy; 2018
+	</div>
+
+	<div id="warehouse">
+		<li id="list-item">
+			<a class="dish-name link-to-dish">
+				<h3></h3>
+			</a>
+			<p class="like-count">
+				<span class="highlighted-text like-icon far">
+					<i class="far fa-heart like-icon"></i> <strong></strong>
+				</span>
+				/ <span class="dine-count"></span></p>
+			<p class="foot align-left">
+				<a href="#" class="like"><i class="far fa-heart like-icon"></i> 讚好</a><!-- 
+				 --><a href="#" class="comment link-to-dish"><i class="far fa-comment-alt"></i> 留言</a>
+			</p>
+
+			<ul class="content comment-box">
+				<li>
+					<form>
+						<p class="msg processing">正在發送留言⋯</p>
+						<p class="msg success">感謝您的留言！</p>
+						<p class="msg error fail">(!) 留言未成功發送，請重試</p>
+						<p class="msg error empty">(!) 留言為空</p>
+						<label for="comment-content">有甚麼想說的嗎？</label>
+						<textarea id="comment-content" placeholder="輸入文字⋯"></textarea>
+						<input type="submit" value="送出">
+					</form>
+				</li>
+			</ul>
+		</li>
+	</div>
+
+	<script
+		src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+		crossorigin="anonymous"></script>
+
+	<script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/autoresize.jquery.js"></script>
+	<script src="script/script.js"></script>
+
+	<script>
+
+		var college_code = getUrlParam('col');
+
+		setTitle(college_code);
+
+		getJSON("rc/" + college_code, function(data){
+			setTitle(college_code + ' ' + data.chinUnitName);
+		});
+
+		getJSON("menu/" + college_code, function(data){
+			dispMenu(data);
+		});
+
+
+		function getTotalDineCount(){
+			getJSON("numberOfPeople/" + college_code, function(data){
+				if(data.result[0]){
+					$(".dine-count").text(data.result[0].people);
+				}
+			})
+		}
+
+		function dispMenu(data){
+
+			$("#dish-list li").remove();
+
+			data = data.result;
+
+			if(data.length < 1) {
+				return $(".loading").text("暫無");
+			}
+
+			for(var key in data) {
+
+				var el = $("#list-item").clone();
+				el.attr("id", "dish-" + data[key]['id']);
+
+				var el_a = el.find(".link-to-dish");
+				el_a.attr("href", "dish_detail.html?col=" + college_code + "&name=" + data[key].dish);
+
+				var el_h3 = el_a.find("h3");
+				el_h3.text(data[key].dish);
+
+				var el_strong = el.find("strong");
+				el_strong.text(data[key].love);
+
+				var el_like = el.find(".like");
+				el_like.attr("href", "javascript:send_a_like(" + data[key]['id'] + ")");
+
+				var el_form = el.find("form");
+				el_form.attr("action", "javascript:submit_a_comment('" + data[key].dish + "', " + data[key]['id'] + ")")
+
+				el.find(".msg").hide();
+
+				$("#dish-list").append(el);
+				el.find("textarea").autoResize();
+			}
+			finishLoading("#dish-list");
+			getTotalDineCount();
+		}
+
+		function change_like_text(id, text) {
+			$("#dish-" + id).find("strong").text(text);
+		}
+
+		function modify_like(data, is_new_like) {
+			
+			data = data.result[0];
+
+			var _id = data['id'];
+			var new_love = data['love'];
+
+			change_like_text(_id, new_love);
+			liked[_id] = is_new_like;
+
+			if(is_new_like) {
+				$("#dish-" + _id).find(".like").addClass("liked");
+				$("#dish-" + _id).find(".like-icon").removeClass("far").addClass("fas");
+			}
+			else{
+				$("#dish-" + _id).find(".like").removeClass("liked");
+				$("#dish-" + _id).find(".like-icon").removeClass("fas").addClass("far");
+			}
+		}
+
+		function modify_like_add(data){
+			return modify_like(data, true);
+		}
+		function modify_like_minus(data){
+			return modify_like(data, false);
+		}
+
+		// Callback after getJSON
+		function add_a_like(id) {
+			modify_like_add({success:true,result:[{"id":id,"love":parseInt($("#dish-"+id).find("strong").text())+1}]});
+		}
+		function remove_a_like(id) {
+			modify_like_minus({success:true,result:[{"id":id,"love":parseInt($("#dish-"+id).find("strong").text())-1}]});
+		}
+
+		var liked = {};
+
+		function didLike(id){
+			return (liked[id] && liked[id]===true);
+		}
+
+		function send_a_like(id) {
+
+			if(!didLike(id)) {
+				add_a_like(id);
+			}
+			else {
+				remove_a_like(id);
+			}
+		}
+
+		function show_success_msg(dish_id) {
+			var el = $("#dish-" + dish_id);
+			el.find(".msg").hide();
+			el.find("label").remove();
+			el.find("textarea").remove();
+			el.find("input").remove();
+			el.find(".success").show();
+		}
+
+		function show_error_msg(dish_id, msgType) {
+			var el = $("#dish-" + dish_id);
+			el.find(".msg").hide();
+			el.find("." + msgType).show();
+			el.find("label").remove();
+			el.find("textarea").show();
+			el.find("input").show();
+		}
+
+		function msg_processing(dish_id) {
+			var el = $("#dish-" + dish_id);
+			el.find(".msg").hide();
+			el.find(".processing").show();
+			el.find("label").hide();
+			el.find("textarea").hide();
+			el.find("input").hide();
+		}
+
+		function submit_a_comment(dish_name, dish_id){
+
+			if(trim(dish_name).length < 1) {
+				return show_error_msg('empty');
+			}
+
+			msg_processing(dish_id);
+
+			getJSON("feedback/new", {
+				rc: college_code,
+				dish: dish_name,
+				comment: $("#dish-" + dish_id).find("textarea").val()
+			}, function(data){
+				if(data.success===true) {
+					show_success_msg(dish_id);
+				}
+				else{
+					show_error_msg(dish_id, 'fail');
+				}
+			})
+		}
+	</script>
+
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
+</body>
+</html>
