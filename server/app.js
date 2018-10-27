@@ -176,6 +176,23 @@ app.get('/menu/allday/:rc', function (req, res) {
   });
 })
 
+app.get('/menu/allday/:rc/:date', function (req, res) {
+  mysqlConnection();
+
+  var date = new Date();
+
+  con.query('SELECT * FROM DHR.Menu WHERE rc = ? and date = ? group by dish order by id desc', 
+  [req.params.rc, req.params.date], function (err, result, fields) {
+    if (err) {
+      var responseStr = {'success': false, 'message': err};
+      res.send(responseStr);
+      return;
+    }
+    var responseStr = {'success': true, 'result': result};
+    res.send(responseStr);
+  });
+})
+
 app.get('/menu/:rc/:date/:mealType', function (req, res) {
   mysqlConnection();
 
@@ -405,11 +422,11 @@ app.get('/rc/:rc', function (req, res) {
 })
 /* [END]    RC */
 
-/* [START]  Manual update people */
-app.get('/update/people', function (req, res) {
+/* [START]  Auto update people */
+cron.schedule("* * * * *", function() {
   updatePeople();
-})
-/* [END]    Manual update people */
+});
+/* [END]    Auto update people */
 
 
 
