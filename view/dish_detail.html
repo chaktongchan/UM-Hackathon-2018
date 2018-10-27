@@ -19,6 +19,7 @@
 		<div class="wrapper">
 			<ul class="content" id="info">
 				<p class="loading">Loading...</p>
+				<p class="tips" style="color: #aaa;">註：本頁數據截至昨日 23:59。</p>
 				<li>
 					<h3>歷史紀錄</h3>
 					<table>
@@ -162,8 +163,8 @@
 		}
 
 		function showAvg(data){
-			$("#avg-d7").text(data.result.past7);
-			$("#avg-d14").text(data.result.past14);
+			$("#avg-d7").text(Math.floor(data.result.past7));
+			$("#avg-d14").text(Math.floor(data.result.past14));
 		}
 
 		getJSON('feedback/past/' + getUrlParam('col') + '/' + getUrlParam('name'), function(data){

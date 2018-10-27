@@ -69,6 +69,11 @@
 
 	<script>
 
+		var liked = {};
+		if(localStorage.liked){
+			liked = JSON.parse(localStorage.liked);
+		}
+
 		var college_code = getUrlParam('col');
 		var curDate = '';
 		var curMeal = '';
@@ -130,6 +135,11 @@
 				var el_like = el.find(".like");
 				el_like.attr("href", "javascript:send_a_like(" + data[key]['id'] + ")");
 
+				if(liked[data[key]['id']] && liked[data[key]['id']]===true) {
+					el_like.addClass("liked");
+					el.find(".like-icon").removeClass("far").addClass("fas");
+				}
+
 				var el_form = el.find("form");
 				el_form.attr("action", "javascript:submit_a_comment('" + data[key].dish + "', " + data[key]['id'] + ")")
 
@@ -156,6 +166,8 @@
 			change_like_text(_id, new_love);
 			liked[_id] = is_new_like;
 
+			localStorage.liked = JSON.stringify(liked);
+
 			if(is_new_like) {
 				$("#dish-" + _id).find(".like").addClass("liked");
 				$("#dish-" + _id).find(".like-icon").removeClass("far").addClass("fas");
@@ -175,18 +187,15 @@
 
 		// Callback after getJSON
 		function add_a_like(id) {
-
-			// getJSON("love/" + college_code + "/" + )
-			// http://10.8.207.15:3000/love/CYTC/2018-10-27/BREAKFAST/雞
-
-
-			modify_like_add({success:true,result:[{"id":id,"love":parseInt($("#dish-"+id).find("strong").text())+1}]});
+			getJSON("love/" + college_code + "/" + curDate + "/" + curMeal + "/" + id, function(data){
+				modify_like_add(data);
+			});
 		}
 		function remove_a_like(id) {
-			modify_like_minus({success:true,result:[{"id":id,"love":parseInt($("#dish-"+id).find("strong").text())-1}]});
+			getJSON("unlove/" + college_code + "/" + curDate + "/" + curMeal + "/" + id, function(data){
+				modify_like_minus(data);
+			});
 		}
-
-		var liked = {};
 
 		function didLike(id){
 			return (liked[id] && liked[id]===true);
